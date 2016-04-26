@@ -8,16 +8,18 @@
    - hostname: name=sparkworker 
    
 - hosts: all
-
-  vars_files:
-   - setup_var.yml 
-  
   tasks:
+
    - name: Generate hosts file
-     lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line= "{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" state=present 
+     lineinfile: dest=/etc/hosts
+                 regexp='.*{{ item }}$i'
+                 line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}"
+                 state=present            
      when: hostvars[item].ansible_default_ipv4.address is defined
      with_items: groups['all']
-    
+   
+   - include_vars: setup_var.yml 
+
    - name: apt update
      apt: update_cache=yes upgrade=dist
 
@@ -119,7 +121,7 @@
    - pip: name=jupyter state=present
     
    - name: adding paths
-     lineinfile: dest={{rc_file}} line='export JUPYTER_CONFIG_DIR={{/usr/local/etc/jupyter}}\n export JUPYTER_PATH={{jupyter_path}}\nexport JUPYTER_RUNTIME_DIR={{jupyter_runtime_dir}}' insertafter='EOF' regexp='export JUPYTER_PATH' state=present 
+     lineinfile: dest={{rc_file}} line='export JUPYTER_CONFIG_DIR={{jupyter_config_dir}}\n export JUPYTER_PATH={{jupyter_path}}\nexport JUPYTER_RUNTIME_DIR={{jupyter_runtime_dir}}' insertafter='EOF' regexp='export JUPYTER_PATH' state=present 
 
      #lineinfile: dest=/home/ubuntu/.bashrc line='export JUPYTER_CONFIG_DIR=/usr/local/etc/jupyter\n export JUPYTER_PATH=/usr/local/share/jupyter\nexport JUPYTER_RUNTIME_DIR=/usr/local/share/jupyter-runtime' insertafter='EOF' regexp='export PATH=\$SPARK_HOME' state=present 
    

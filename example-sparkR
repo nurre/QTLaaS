@@ -1,0 +1,7 @@
+#Example: https://spark.apache.org/docs/latest/sparkr.html
+library(SparkR, lib.loc = "/usr/local/spark-1.6.1-bin-hadoop2.6/R/lib")
+sc = sparkR.init(master="spark://QTLmaster:7077",sparkHome = "/usr/local/spark-1.6.1-bin-hadoop2.6") # Change the master name (QTLmaster) with the correct name.
+sqlContext = sparkRSQL.init(sc)
+df <- createDataFrame(sqlContext, faithful)
+#Displays the content of the DataFrame to stdout
+head(df)

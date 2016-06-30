@@ -21,10 +21,10 @@ We will soon provide a demo through our project webpage using the SNIC cloud res
 3. Add the IP-address/hostnames of Spark Master and Spark Worker to 
 `/etc/hosts`
 in Ansible Master node.
-4. Generate a key and copy its public part to ~/.ssh/authorized_keys in all the Spark nodes.
-5. Edit /etc/ansible/hosts. Add [sparkmaster] followed by the name of sparkmaster node in the next line. Add [sparkworker] followed by the names of sparkworkers in the next lines, one per line.
+4. Generate a key and copy its public part to `~/.ssh/authorized_keys` in all the Spark nodes.
+5. Edit `/etc/ansible/hosts`. Add `[sparkmaster]` followed by the name of sparkmaster node in the next line. Add `[sparkworker]` followed by the names of sparkworkers in the next lines, one per line.
 6. Modify the environment variables available in the file: setup_var.yml, if needed.
-7. Run ansible-playbook -s spark_deployment.yml, where -s is the sudo flag.
+7. Run `ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag.
 
 After all the steps above, Jupiter, Spark Master and R will be installed in Spark Master, and Spark Worker and R is installed in all Spark Workers.
 

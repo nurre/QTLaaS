@@ -8,9 +8,12 @@ We have developed QTL as a Service (QTLaaS) using PruneDIRECT algorithm. QTLaaS 
 
 Three files are required for this method: `ansible_install.sh, setup_var.yml,spark_deployment.yml`
 
-1. Step 1: Install Ansible using the bash scrip in the file: `ansible_install.sh`. Configure Ansible hosts.
+Note: Following commands have been tested on Ubuntu 16.04.  
+
+0. Step 0: All nodes in the setup are required to communicate via SSH keys. For more infomation visit,  https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4).  
+1. Step 1: Install Ansible using the bash script, `ansible_install.sh` on configuration/master node.
 2. Step 2: Modify the environment variables available in the file: `setup_var.yml`, if needed.
-3. Step 3: For setup deployment run: `spark_deployment.yml` as root which is the actual file that contains all the installation restructures for all the components of our architecture. For example `# ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag. 
+3. Step 3: For setup deployment, execute: `spark_deployment.yml` as root which is the actual file that contains the installation setups for all the components of QTLaaS platform. Command: `# ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag. 
 
 We will soon provide a demo through our project webpage using the SNIC cloud resources. Any user can try QTLaaS over a few nodes in our cloud setting. For larger computation, one can download QTLaaS from the github repository and it automatically deploys the desired number of nodes over an infrastructure.
 

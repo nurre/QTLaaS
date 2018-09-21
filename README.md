@@ -15,7 +15,7 @@ Note: Following commands have been tested on Ubuntu 16.04.
 
 We will soon provide a demo through our project webpage using the SNIC cloud resources. Any user can try QTLaaS over a few nodes in our cloud setting. For larger computation, one can download QTLaaS from the github repository and it automatically deploys the desired number of nodes over an infrastructure.
 
-##Setup details
+## Setup details
 
 1. Setup up at least 3 nodes, one for the Ansible Master, one for the Spark Master, and at least one for the Spark Worker. 
 2. Install Ansible using the bash script in the file: ansible_install.sh.

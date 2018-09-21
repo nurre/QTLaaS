@@ -62,8 +62,8 @@
      apt: pkg={{item}} state=latest update_cache=true
      with_items: 
       - libreadline-dev
-      - libzmq3 
-      - libzmq3-dev
+      - libzmq5 
+      - libzmq5-dev
       - libcurl4-gnutls-dev
       - r-cran-rcurl
       - libssl-dev

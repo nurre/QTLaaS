@@ -94,6 +94,12 @@
      with_items:
       - rzmq
       - repr
+      - evaluate
+      - crayon
+      - pbdZMQ
+      - devtools
+      - uuid
+      - digest
       - IRkernel
       - IRdisplay
 
@@ -123,14 +129,25 @@
      shell: . {{rc_file}}
 
      #shell: . /home/ubuntu/.bashrc
- 
-   - name:  adding IRKernel
+
+   - name:  add IRKernel
      command: /usr/bin/Rscript --slave --no-save --no-restore-history -e "devtools::install_github('IRkernel/IRkernel')"
+
+   - name: start IRKernel
      command: /usr/bin/Rscript --slave --no-save --no-restore-history -e "IRkernel::installspec(user = FALSE)"
 
    - name: start jupyter
-     shell: nohup jupyter notebook --ip=0.0.0.0 --port=60060 &
+     shell: runuser -l ubuntu -c 'jupyter notebook --ip=0.0.0.0 --port=60060 &'
+     async: 2592000               # 60*60*24*30 – 1 month
+     args:
+      executable: /bin/bash 
+   
+   - name: jupyter server token
+     shell: cat /home/ubuntu/.local/share/jupyter/runtime/*.json | grep token
+     register: token
 
+   - debug: msg="{{ token.stdout }}"
+   
    - name: disable IPv6
      shell: "{{item}}"
      with_items: 

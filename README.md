@@ -31,7 +31,8 @@ For more information about ansible communication setup visit: https://www.digita
 6. Modify the environment variables available in the file: setup_var.yml, if needed.
 7. Run `ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag.
 8. Make sure the following ports are open on Spark Master node, `60060` for Jupyter Hub, `7077` Spark Context, `8080` Spark Web UI.
-9. Now you can access following services: 
+9a. Jupyter server tokens will be visible in ansible log messages. 
+9b. Now you can access following services: 
 `http://sparkmaster:60060`
 `http://sparkmaster:8080`
 10. Use `example-sparkR` file to make sure your setup is working. 

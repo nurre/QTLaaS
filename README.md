@@ -24,7 +24,7 @@ We will soon provide a demo through our project webpage using the SNIC cloud res
 in Ansible Master node.
 4. Generate a key and copy its public part to `~/.ssh/authorized_keys` in all the Spark nodes.
 
-For more information: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4)
+For more information about ansible communication setup visit: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4)
 
 5. Edit `/etc/ansible/hosts` using `example-hosts-file` available in the reprository. (Add `[sparkmaster]` followed by the name of sparkmaster node in the next line. Add `[sparkworker]` followed by the names of sparkworkers in the next lines, one per line).
 6. Modify the environment variables available in the file: setup_var.yml, if needed.

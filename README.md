@@ -4,17 +4,12 @@ Project webpage: http://www.it.uu.se/research/project/ctrait/QTLaaS
 
 ## Summary
 We have developed QTL as a Service (QTLaaS) using PruneDIRECT algorithm. QTLaaS automatically deploys an R cluster for using PruneDIRECT, or any statistical analysis in R, over your desired infrastructure.
-
-To run the setup, you need atleast two VMs:
- - VM1 -> Ansible-node, Spark Master
- - VM2 -> Spartk Worker
  
 Three files are required for this method: `ansible_install.sh, setup_var.yml,spark_deployment.yml`
 
 Note: Following commands have been tested on Ubuntu 16.04.  
-
-0. Step 0: All nodes in the setup are required to communicate via SSH keys. For more infomation visit,  https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4).  
-1. Step 1: Install Ansible using the bash script, `ansible_install.sh` on configuration/master node.
+  
+1. Step 1: Install Ansible using the bash script, `ansible_install.sh`.
 2. Step 2: Modify the environment variables available in the file: `setup_var.yml`, if needed.
 3. Step 3: For setup deployment, execute: `spark_deployment.yml` as root which is the actual file that contains the installation setups for all the components of QTLaaS platform. Command: `# ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag. 
 
@@ -28,6 +23,9 @@ We will soon provide a demo through our project webpage using the SNIC cloud res
 `/etc/hosts`
 in Ansible Master node.
 4. Generate a key and copy its public part to `~/.ssh/authorized_keys` in all the Spark nodes.
+
+For more information: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4)
+
 5. Edit `/etc/ansible/hosts` using `example-hosts-file` available in the reprository. (Add `[sparkmaster]` followed by the name of sparkmaster node in the next line. Add `[sparkworker]` followed by the names of sparkworkers in the next lines, one per line).
 6. Modify the environment variables available in the file: setup_var.yml, if needed.
 7. Run `ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag.

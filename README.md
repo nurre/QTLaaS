@@ -5,7 +5,10 @@ Project webpage: http://www.it.uu.se/research/project/ctrait/QTLaaS
 ## Summary
 We have developed QTL as a Service (QTLaaS) using PruneDIRECT algorithm. QTLaaS automatically deploys an R cluster for using PruneDIRECT, or any statistical analysis in R, over your desired infrastructure.
 
-
+To run the setup, you need atleast two VMs:
+ - VM1 -> Ansible-node, Spark Master
+ - VM2 -> Spartk Worker
+ 
 Three files are required for this method: `ansible_install.sh, setup_var.yml,spark_deployment.yml`
 
 Note: Following commands have been tested on Ubuntu 16.04.  

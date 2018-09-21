@@ -18,7 +18,7 @@ We will soon provide a demo through our project webpage using the SNIC cloud res
 ## Setup details
 
 1. Setup up at least 3 nodes, one for the Ansible Master, one for the Spark Master, and at least one for the Spark Worker. 
-2. Install Ansible using the bash script in the file: ansible_install.sh.
+2. Install Ansible using the bash script in the file: `ansible_install.sh`.
 3. Add the IP-address/hostnames of Spark Master and Spark Worker to 
 `/etc/hosts`
 in Ansible Master node.

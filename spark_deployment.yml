@@ -146,7 +146,8 @@
      shell: cat /home/ubuntu/.local/share/jupyter/runtime/*.json | grep token
      register: token
 
-   - debug: msg="{{ token.stdout }}"
+   - debug:
+      var: token.stdout_lines
    
    - name: disable IPv6
      shell: "{{item}}"

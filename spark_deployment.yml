@@ -125,10 +125,11 @@
      #shell: . /home/ubuntu/.bashrc
  
    - name:  adding IRKernel
+     command: /usr/bin/Rscript --slave --no-save --no-restore-history -e "devtools::install_github('IRkernel/IRkernel')"
      command: /usr/bin/Rscript --slave --no-save --no-restore-history -e "IRkernel::installspec(user = FALSE)"
 
    - name: start jupyter
-     shell: nohup jupyter notebook --ip=* --port=60060 &
+     shell: nohup jupyter notebook --ip=0.0.0.0 --port=60060 &
 
    - name: disable IPv6
      shell: "{{item}}"

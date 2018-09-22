@@ -23,12 +23,12 @@ We will soon provide a demo through our project webpage using the SNIC cloud res
 3. Add the IP-address and hostname of the Ansible Master, Spark Master and Spark Worker to 
 `/etc/hosts`
 file in Ansible Master node.
-4. Generate a SSH-key pair in Ansible Master node and copy its public part to `~/.ssh/authorized_keys` in all the Spark nodes. This step allow Ansible Master node to communicate with Spark nodes. 
+4. Generate a SSH-key pair in Ansible Master node and copy its public part to `~/.ssh/authorized_keys` in all the Spark nodes. This step allows Ansible Master to communicate with Spark nodes. 
 
-For more information on ansible communication setup visit: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4)
+For more information on ansible communication setup, visit: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4)
 
 5. Edit `/etc/ansible/hosts` using `example-hosts-file` available in the reprository. (Add `[sparkmaster]` followed by the name of sparkmaster node in the next line. Add `[sparkworker]` followed by the names of sparkworkers in the next lines, one per line).
-6. Modify the environment variables available in the file: setup_var.yml, if needed.
+6. Modify the environment variables available in the file `setup_var.yml`, if needed.
 7. Run `ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag.
 8. Make sure the following ports are open on Spark Master node, `60060` for Jupyter Hub, `7077` Spark Context, `8080` Spark Web UI.
 9. Jupyter server tokens will be visible in ansible log messages.

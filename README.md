@@ -30,11 +30,10 @@ For more information on ansible communication setup, visit: https://www.digitalo
 5. Edit `/etc/ansible/hosts` using `example-hosts-file` available in the reprository. (Add `[sparkmaster]` followed by the name of sparkmaster node in the next line. Add `[sparkworker]` followed by the names of sparkworkers in the next lines, one per line).
 6. Modify the environment variables available in the file `setup_var.yml`, if needed.
 7. Run `ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag.
-8. Make sure the following ports are open on Spark Master node, `60060` for Jupyter Hub, `7077` Spark Context, `8080` Spark Web UI.
+8. Make sure the following ports are open on Spark Master node, `60060` for Jupyter Hub (external access), `7077` Spark Context (internal access), `8080` Spark Web UI (internal access).
 9. Jupyter server tokens will be visible in ansible log messages.
 10. Now you can access following services: 
-`http://sparkmaster:60060`
-`http://sparkmaster:8080`
+`http://<sparkmaster-external-IP>:60060`
 11. Execute the steps mentioned in `example-sparkR` file to make sure your setup is working. 
 
 After all the steps above, Jupiter, Spark Master and R will be installed in Spark Master, and Spark Worker and R is installed in all Spark Workers.
@@ -45,4 +44,3 @@ Here are the steps to add new nodes to your already configured cluster:
 
 1. New node(s) should be accessible from the Ansible Master node (repeat steps (3,4 and 5) mentioned in the "Setup details" section).    
 2. Run the ansible playbook again. `ansible-playbook -s spark_deployment.yml`.
-

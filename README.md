@@ -9,7 +9,7 @@ Three files are required for this method: `ansible_install.sh, setup_var.yml,spa
 
 Note: Following commands have been tested on Ubuntu 16.04.  
 
-0. Step 0: `python` is required to be available on each node. If it is not available install it with `# apt install python-minimal`   
+0. Step 0: `python` command is required to be available on each node. If it is not available install with `# apt install python-minimal`   
 1. Step 1: Install Ansible using the bash script, `ansible_install.sh`.
 2. Step 2: Modify the environment variables available in the file: `setup_var.yml`, if needed.
 3. Step 3: For setup deployment, execute: `spark_deployment.yml` as root which is the actual file that contains the installation setups for all the components of QTLaaS platform. Command: `# ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag. 

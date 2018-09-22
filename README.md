@@ -14,7 +14,7 @@ Note: Following commands have been tested on Ubuntu 16.04.
 2. Step 2: Modify the environment variables available in the file: `setup_var.yml`, if needed.
 3. Step 3: For setup deployment, execute: `spark_deployment.yml` as root which is the actual file that contains the installation setups for all the components of QTLaaS platform. Command: `# ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag. 
 
-We will soon provide a demo through our project webpage using the SNIC cloud resources. Any user can try QTLaaS over a few nodes in our cloud setting. For larger computation, one can download QTLaaS from the github repository and it automatically deploys the desired number of nodes over an infrastructure.
+We will soon provide a demo through our project webpage using the SNIC cloud resources. The users can try QTLaaS over a few nodes in our cloud setting. For larger computation, one can download QTLaaS from the github repository and deploy the desired number of nodes over an infrastructure.
 
 ## Setup details
 

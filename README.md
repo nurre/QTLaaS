@@ -35,10 +35,17 @@ For more information about ansible communication setup visit: https://www.digita
 10. Now you can access following services: 
 `http://sparkmaster:60060`
 `http://sparkmaster:8080`
-11. Use `example-sparkR` file to make sure your setup is working. 
+11. Execute the steps mentioned in `example-sparkR` file to make sure your setup is working. 
 
 After all the steps above, Jupiter, Spark Master and R will be installed in Spark Master, and Spark Worker and R is installed in all Spark Workers.
 
-##How to add nodes
+## (Optional) Add more node(s)
+
+Here are the steps to add new nodes to your already configured cluster:
+
+1. New node(s) should be accessible from the Ansible Master node (repeat steps (3,4 and 5) mentioned in the "Setup details" section).    
+2. Run the ansible playbook again. `ansible-playbook -s spark_deployment.yml`
+
+## How to add nodes
 In order to add new nodes to your already configured cluster, you should just add the new hosts to the Ansible hosts file, under [sparkworker] tag.
 

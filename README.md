@@ -44,8 +44,5 @@ After all the steps above, Jupiter, Spark Master and R will be installed in Spar
 Here are the steps to add new nodes to your already configured cluster:
 
 1. New node(s) should be accessible from the Ansible Master node (repeat steps (3,4 and 5) mentioned in the "Setup details" section).    
-2. Run the ansible playbook again. `ansible-playbook -s spark_deployment.yml`
-
-## How to add nodes
-In order to add new nodes to your already configured cluster, you should just add the new hosts to the Ansible hosts file, under [sparkworker] tag.
+2. Run the ansible playbook again. `ansible-playbook -s spark_deployment.yml`.
 

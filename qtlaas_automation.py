@@ -1,4 +1,5 @@
 import logging
+import time, os, sys
 from os import system
 import get_ansible_workers
 from novaclient import client
@@ -11,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Setting up cloud configuration parameters
-flavor = "ACCHT18.normal"
+flavor_name = "ACCHT18.normal"
 private_net = "SNIC 2018/10-30 Internal IPv4 Network"
 floating_ip_pool_name = None
 floating_ip = None
@@ -41,9 +42,9 @@ def find_all_instances():
         ip = instance.networks[private_net][0]
         name = instance.name
         if worker_name in name:
-            print "Worker Instance: ", name, "Has the IP: ", ip
+            print("Worker Instance: ", name, "Has the IP: ", ip)
         else:
-            print "Instance: ", name, "Has the IP: ", ip
+            print("Instance: ", name, "Has the IP: ", ip)
 
 
 # Simple function to update the file /etc/ansible/hosts
@@ -59,6 +60,24 @@ def update_ansible_hosts_file(lines):
     f_ansible.write(lines + old)
     f_ansible.close()
     return True
+
+
+def run_linux_cmds(linux_cmds):
+    for command in linux_cmds:
+        try:
+            system(command)
+        except:
+            logger.error("__ACC__:Something went wrong while attempting to run: "+ linux_cmds + "Skipping this instance")
+            logger.error('__ACC__: Try to run the command manually.')
+            continue
+
+
+def save_linux_cmds(linux_cmds):
+    f = open("linux_commands.txt", "w")
+    for command in linux_cmds:
+        f.write(command + "\n")
+    f.close()
+
 
 # Responsible for detecting new relevant workers in the cloud, updating the hosts files with the correct IPs and names,
 # and copying the id_rsa.pub from the master to the new workers' authorized_keys file
@@ -87,6 +106,7 @@ def find_new_workers():
             return False
         logger.info("__ACC__:New worker(s) successfully detected in Openstack.")
         lines = ""
+        linux_cmds = []
         for index in range(len(workers_instances)):
             try:
                 worker_instance = workers_instances[index]
@@ -102,17 +122,9 @@ def find_new_workers():
                     f_ansible.write(ansible_line)
                     ansible_start_line = string_compare + " ansible_ssh_host=" + ip + "\n"
                     lines += ansible_start_line
-                    try:
-                        linux_cmd = 'ssh ubuntu@' + string_compare + \
-                                    '"cat >> ~/.ssh/authorized_keys" < ~/.ssh/id_rsa.pub'
-                        system(linux_cmd)
-                    except:
-                        logger.error("__ACC__:Something went wrong while adding the master's public key "
-                                     "to the instance: " + string_compare + "'s Authorized_keys. "
-                                                                            "Skipping this instance.")
-                        logger.error('__ACC__: Try to run the command manually: '
-                                    'ssh ubuntu@sparkworker2 "cat >> ~/.ssh/authorized_keys" < ~/.ssh/id_rsa.pub')
-                        continue
+                    linux_cmd = 'ssh ubuntu@' + string_compare + \
+                                '" cat >> ~/.ssh/authorized_keys" < ~/.ssh/id_rsa.pub'
+                    linux_cmds.append(linux_cmd)
 
             except:
                 logger.error("__ACC__:Something went wrong while checking the instance: "+workers_instances[index] +
@@ -120,6 +132,61 @@ def find_new_workers():
                 continue
         f.close()
         f_ansible.close()
+        # run_linux_cmds(linux_cmds)
+        save_linux_cmds(linux_cmds)
         return update_ansible_hosts_file(lines)
+
+# Generates the name of the new worker
+# Return: string Group12_WorkerI... where I is the index of the new worker
+def get_new_worker_name():
+    indices = []
+    workers_instances = nova.servers.list(search_opts={"name": worker_name})
+    for worker in workers_instances:
+        name = worker.name
+        print("Name:", name)
+        index = name[name.find("Worker")+len("Worker"):]
+        indices.append(int(index))
+    indices.sort()
+    instance_name = worker_name + str(indices[-1]+1)
+    return instance_name
+
+
+def create_new_worker():
+    #image = nova.glance.find_image(image_name)
+    image = nova.images.find(name=image_name)
+    flavor = nova.flavors.find(name=flavor_name)
+    keyname = "group12"
+    if private_net is not None:
+        net = nova.neutron.find_network(private_net)
+        nova.networks.find(name=private_net)
+        nics = [{'net-id': net.id}]
+    else:
+        sys.exit("private-net not defined.")
+
+    cfg_file_path = os.getcwd() + '/cloud-cfg.txt'
+    if os.path.isfile(cfg_file_path):
+        userdata = open(cfg_file_path)
+    else:
+        sys.exit("cloud-cfg.txt is not in current working directory")
+    secgroups = ['default']
+    logger.info("__ACC__:Creating new instance...")
+    instance_name = get_new_worker_name()
+    print(instance_name)
+    instance = nova.servers.create(name=instance_name, image=image, flavor=flavor, userdata=userdata, nics=nics,
+                                   key_name=keyname, security_groups=secgroups)
+    inst_status = instance.status
+    logger.info("__ACC__:Waiting 10 seconds...")
+    time.sleep(10)
+    while inst_status == 'BUILD':
+        logger.info("__ACC__:Instance" + instance.name + " is in " + inst_status +
+                    "state, sleeping for 5 seconds more...")
+        time.sleep(5)
+        instance = nova.servers.get(instance.id)
+        inst_status = instance.status
+
+    logger.info("__ACC__:Instance: " + instance.name + " is in " + inst_status + "state")
+
+
+create_new_worker()
 
 find_new_workers()

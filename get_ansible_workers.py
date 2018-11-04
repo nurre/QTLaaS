@@ -23,7 +23,7 @@ def return_workers():
                 line = line.split()
                 if len(line) == 0:
                     continue
-                workers.append(line)
+                workers.append(line[0])
             else:
                 continue
         else:

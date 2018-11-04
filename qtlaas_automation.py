@@ -141,13 +141,16 @@ def find_new_workers():
 def get_new_worker_name():
     indices = []
     workers_instances = nova.servers.list(search_opts={"name": worker_name})
-    for worker in workers_instances:
-        name = worker.name
-        print("Name:", name)
-        index = name[name.find("Worker")+len("Worker"):]
-        indices.append(int(index))
-    indices.sort()
-    instance_name = worker_name + str(indices[-1]+1)
+    if workers_instances:
+        for worker in workers_instances:
+            name = worker.name
+            print("Name:", name)
+            index = name[name.find("Worker")+len("Worker"):]
+            indices.append(int(index))
+        indices.sort()
+        instance_name = worker_name + str(indices[-1]+1)
+    else:
+        instance_name = worker_name + str(1)
     return instance_name
 
 

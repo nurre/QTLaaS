@@ -229,8 +229,8 @@ def create_worker_snapshot():
                     return False
     return create_new_worker(image_name=worker_image_name)
 
-create_new_worker()
+#create_new_worker()
 
-find_new_workers()
-im = "Group12_Worker1"
-nova.images.create(name="Worker_Base_Snapshot", image=im)
+#find_new_workers()
+
+#create_worker_snapshot()

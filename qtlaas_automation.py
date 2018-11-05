@@ -6,6 +6,7 @@ from novaclient import client
 from os import environ as env
 from keystoneauth1 import loading
 from keystoneauth1 import session
+import glanceclient.v2.client as glclient
 
 # Setting up logging parameters
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +18,7 @@ private_net = "SNIC 2018/10-30 Internal IPv4 Network"
 floating_ip_pool_name = None
 floating_ip = None
 image_name = "Ubuntu 16.04 LTS (Xenial Xerus) - latest"
-
+keyname = "group12"
 loader = loading.get_plugin_loader('password')
 
 # Authorizing user from global variables
@@ -31,6 +32,7 @@ auth = loader.load_from_options(auth_url=env['OS_AUTH_URL'],
 
 sess = session.Session(auth=auth)
 nova = client.Client('2.1', session=sess)
+glance = glclient.Client('2.1', session=sess)
 logger.info("__ACC__: Successfully completed User Authorization.")
 worker_name = "Group12_Worker"
 
@@ -154,11 +156,11 @@ def get_new_worker_name():
     return instance_name
 
 
-def create_new_worker():
+def create_new_worker(image_name="Ubuntu 16.04 LTS (Xenial Xerus) - latest"):
     #image = nova.glance.find_image(image_name)
     image = nova.images.find(name=image_name)
     flavor = nova.flavors.find(name=flavor_name)
-    keyname = "group12"
+
     if private_net is not None:
         net = nova.neutron.find_network(private_net)
         nova.networks.find(name=private_net)
@@ -188,8 +190,47 @@ def create_new_worker():
         inst_status = instance.status
 
     logger.info("__ACC__:Instance: " + instance.name + " is in " + inst_status + "state")
+    if inst_status == "ACTIVE":
+        return True
+    else:
+        return False
 
+
+def create_worker_snapshot():
+    worker_image_name = "Group12_WorkerBase_Snapshot"
+    found = False
+    attempt = 1
+    while not found:
+        try:
+            # Find image from snapshot in Openstack
+            nova.images.find(name=worker_image_name)
+            found = True
+            logger.info("__ACC__:Image was found.")
+        except:
+            # No image from snapshot was found thus attempt to create snapshot from Group12_Worker1
+            logger.info("__ACC__:No Image was found with name Worker_Base_Snapshot...")
+            logger.info("__ACC__:Looking for worker to create snapshot from...")
+            try:
+                # Attempts to find instance Group12_Worker1
+                base_worker = nova.servers.list(search_opts={"name": worker_name + str(1)})
+                # Found instance Group12_Worker1 -> Attempts to create snapshot from it
+                glance.images.create(name=worker_image_name, image=base_worker)
+            except:
+                # Since instance doesn't exist -> Attempts to create new instance Group12_Worker1
+                # Repeat the loop until snapshot is created and/or image is found
+                logger.info("__ACC__:No worker was found in Openstack.")
+                logger.info("__ACC__: Attempt Number " + str(attempt) + " to create a new instance.")
+                if attempt < 6:
+                    if create_new_worker():
+                        return True
+                    attempt += 1
+                else:
+                    logger.info("__ACC__: 5 failed attempts to create a new working. Quitting...")
+                    return False
+    return create_new_worker(image_name=worker_image_name)
 
 create_new_worker()
 
 find_new_workers()
+im = "Group12_Worker1"
+nova.images.create(name="Worker_Base_Snapshot", image=im)

@@ -68,7 +68,7 @@ def upload_file():
     <!doctype html>
     <title>Upload new File</title>
     <h1>Upload new File</h1>
-    <h2>Är vi här?</h2>
+    <h2>Är vi här? Yup</h2>
     <form method=post enctype=multipart/form-data>
       <input type=file name=file>
       <input type=submit value=Upload>
@@ -81,5 +81,5 @@ def uploaded_file(filename):
                                filename)
 
 if __name__ == '__main__':
-	app.run(debug=True) #For Internal
-	#app.run(host=0.0.0.0, debug=True) #For external
+	#app.run(debug=True) #For Internal
+	app.run(host=0.0.0.0, debug=True) #For external

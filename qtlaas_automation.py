@@ -1,7 +1,7 @@
-import logging
-import time
 import os
 import sys
+import time
+import logging
 from os import system
 import get_ansible_workers
 from novaclient import client
@@ -82,6 +82,7 @@ def save_linux_cmds(linux_cmds):
     for command in linux_cmds:
         f.write(command + "\n")
     f.close()
+    return True
 
 
 # Responsible for detecting new relevant workers in the cloud, updating the hosts files with the correct IPs and names,
@@ -128,7 +129,7 @@ def find_new_workers():
                     ansible_start_line = string_compare + " ansible_ssh_host=" + ip + "\n"
                     lines += ansible_start_line
                     linux_cmd = 'ssh ubuntu@' + string_compare + \
-                                '" cat >> ~/.ssh/authorized_keys" < ~/.ssh/id_rsa.pub'
+                                ' "cat >> ~/.ssh/authorized_keys" < ~/.ssh/id_rsa.pub'
                     linux_cmds.append(linux_cmd)
 
             except:
@@ -160,26 +161,30 @@ def get_new_worker_name():
     return instance_name
 
 
-def create_new_worker(image_name="Ubuntu 16.04 LTS (Xenial Xerus) - latest"):
+def create_new_instance(image_name="Ubuntu 16.04 LTS (Xenial Xerus) - latest", instance_name=None, master=False):
     image = nova.images.find(name=image_name)
     flavor = nova.flavors.find(name=flavor_name)
-
+    keyname = "group12"
     if private_net is not None:
-        net = nova.neutron.find_network(private_net)
-        nova.networks.find(name=private_net)
+        net = nova.networks.find(label=private_net)
         nics = [{'net-id': net.id}]
     else:
         sys.exit("private-net not defined.")
+    if not master:
+        cloud_cfg_filename = '/cloud-cfg.txt'
+    else:
+        cloud_cfg_filename = '/cloud-cfg-master.txt'
 
-    cfg_file_path = os.getcwd() + '/cloud-cfg.txt'
+    cfg_file_path = os.getcwd() + cloud_cfg_filename
     if os.path.isfile(cfg_file_path):
         userdata = open(cfg_file_path)
     else:
-        sys.exit("cloud-cfg.txt is not in current working directory")
+        sys.exit(cloud_cfg_filename + " is not in current working directory")
     secgroups = ['default']
     logger.info("__ACC__:Creating new instance...")
-    instance_name = get_new_worker_name()
-    print(instance_name)
+    if instance_name is None:
+        instance_name = get_new_worker_name()
+
     instance = nova.servers.create(name=instance_name, image=image, flavor=flavor, userdata=userdata, nics=nics,
                                    key_name=keyname, security_groups=secgroups)
     inst_status = instance.status
@@ -224,13 +229,14 @@ def create_worker_snapshot():
                 logger.info("__ACC__:No worker was found in Openstack.")
                 logger.info("__ACC__: Attempt Number " + str(attempt) + " to create a new instance.")
                 if attempt < 6:
-                    if create_new_worker():
+                    if create_new_instance():
                         return True
                     attempt += 1
                 else:
                     logger.error("__ACC__: 5 failed attempts to create a new working. Quitting...")
                     return False
-    return create_new_worker(image_name=worker_image_name)
+    return create_new_instance(image_name=worker_image_name)
+
 
 def delete_worker(delete_worker_name=None):
     if delete_worker_name:
@@ -304,8 +310,65 @@ def remove_cluster_worker():
             return False
     return True
 
-# create_new_worker()
 
-# find_new_workers()
+def edit_master_file(file_name, lines):
+    try:
+        f = open(file_name, "a")
+    except:
+        logger.error("__ACC__:Something went wrong while trying to open the file:", file_name," . Make sure you "
+                     "have permissions to open this file and try again. ")
+        return False
+    f.write(lines)
+    f.close()
+    return True
 
-# create_worker_snapshot()
+
+def setup_master_node(master_name=None):
+
+    if master_name is None:
+        master_name = "Group12_Master"
+
+    master_instance = nova.servers.list(search_opts={"name": master_name})[0]
+    ip = master_instance.networks[private_net][0]
+
+    # Create lines to update /etc/hosts with
+    lines = "\n"
+    line = ip + " ansible-node\n"
+    lines += line
+    line = ip + " sparkmaster\n"
+    lines += line
+
+    # Update /etc/hosts with above lines
+    if edit_master_file(file_name="/etc/hosts", lines=lines):
+        logger.info("__ACC__: Successfully updated the file /etc/hosts.")
+    else:
+        logger.error("__ACC__:Something went wrong while trying to open the file /etc/ansible/hosts. Make sure you "
+                     "have permissions to open this file and try again. ")
+        return False
+
+    # Create lines to append in /etc/ansible/hosts
+    lines = "\n[configNode]\n"
+    lines += "ansible-node ansible_connection=local ansible_user=ubuntu\n\n"
+    lines += "[sparkmaster]\n"
+    lines += "sparkmaster ansible_connection=local ansible_user=ubuntu\n\n"
+    lines += "[sparkworker]\n"
+    # Append above lines /etc/ansible/hosts
+
+    if edit_master_file(file_name="/etc/ansible/hosts", lines=lines):
+        logger.info("__ACC__: Successfully updated the file /etc/ansible/hosts.")
+    else:
+        logger.error("__ACC__:Something went wrong while trying to open the file /etc/hosts. Make sure you "
+                     "have permissions to open this file and try again. ")
+        return False
+
+    # Create lines to update /etc/ansible/hosts with
+    lines = "\nansible-node ansible_ssh_host=" + ip + "\n"
+    lines += "sparkmaster ansible_ssh_host=" + ip + "\n"
+
+    # Update /etc/hosts with above lines
+    if update_ansible_hosts_file(lines):
+        logger.info("__ACC__: Successfully updated the file /etc/hosts.")
+    else:
+        logger.error("__ACC__:Something went wrong while trying to open the file /etc/hosts. Make sure you "
+                     "have permissions to open this file and try again. ")
+        return False

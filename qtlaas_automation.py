@@ -1,11 +1,14 @@
 import logging
-import time, os, sys
+import time
+import os
+import sys
 from os import system
 import get_ansible_workers
 from novaclient import client
 from os import environ as env
 from keystoneauth1 import loading
 from keystoneauth1 import session
+import glanceclient.v2.client as glclient
 
 # Setting up logging parameters
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +20,7 @@ private_net = "SNIC 2018/10-30 Internal IPv4 Network"
 floating_ip_pool_name = None
 floating_ip = None
 image_name = "Ubuntu 16.04 LTS (Xenial Xerus) - latest"
-
+keyname = "group12"
 loader = loading.get_plugin_loader('password')
 
 # Authorizing user from global variables
@@ -31,13 +34,14 @@ auth = loader.load_from_options(auth_url=env['OS_AUTH_URL'],
 
 sess = session.Session(auth=auth)
 nova = client.Client('2.1', session=sess)
+glance = glclient.Client('2.1', session=sess)
 logger.info("__ACC__: Successfully completed User Authorization.")
 worker_name = "Group12_Worker"
 
 
 # Simple function to print all Group12 relevant instances
 def find_all_instances():
-    relevant_instances = nova.servers.list(search_opts={"name":"Group12"}) #[0]
+    relevant_instances = nova.servers.list(search_opts={"name": "Group12"})
     for instance in relevant_instances:
         ip = instance.networks[private_net][0]
         name = instance.name
@@ -67,7 +71,8 @@ def run_linux_cmds(linux_cmds):
         try:
             system(command)
         except:
-            logger.error("__ACC__:Something went wrong while attempting to run: "+ linux_cmds + "Skipping this instance")
+            logger.error("__ACC__:Something went wrong while attempting to run: " + linux_cmds +
+                         "Skipping this instance")
             logger.error('__ACC__: Try to run the command manually.')
             continue
 
@@ -93,13 +98,13 @@ def find_new_workers():
         return False
     else:
         try:
-            f = open("/etc/hosts","a")
+            f = open("/etc/hosts", "a")
         except:
             logger.error("__ACC__:Something went wrong while trying to open the file /etc/hosts. Make sure you "
                          "have permissions to open this file and try again. ")
             return False
         try:
-            f_ansible = open("/etc/ansible/hosts","a")
+            f_ansible = open("/etc/ansible/hosts", "a")
         except:
             logger.error("__ACC__:Something went wrong while trying to open the file /etc/ansible/hosts. Make sure you "
                          "have permissions to open this file and try again. ")
@@ -136,6 +141,7 @@ def find_new_workers():
         save_linux_cmds(linux_cmds)
         return update_ansible_hosts_file(lines)
 
+
 # Generates the name of the new worker
 # Return: string Group12_WorkerI... where I is the index of the new worker
 def get_new_worker_name():
@@ -154,11 +160,10 @@ def get_new_worker_name():
     return instance_name
 
 
-def create_new_worker():
-    #image = nova.glance.find_image(image_name)
+def create_new_worker(image_name="Ubuntu 16.04 LTS (Xenial Xerus) - latest"):
     image = nova.images.find(name=image_name)
     flavor = nova.flavors.find(name=flavor_name)
-    keyname = "group12"
+
     if private_net is not None:
         net = nova.neutron.find_network(private_net)
         nova.networks.find(name=private_net)
@@ -188,8 +193,119 @@ def create_new_worker():
         inst_status = instance.status
 
     logger.info("__ACC__:Instance: " + instance.name + " is in " + inst_status + "state")
+    if inst_status == "ACTIVE":
+        return True
+    else:
+        return False
 
 
-create_new_worker()
+def create_worker_snapshot():
+    worker_image_name = "Group12_WorkerBase_Snapshot"
+    found = False
+    attempt = 1
+    while not found:
+        try:
+            # Find image from snapshot in Openstack
+            nova.images.find(name=worker_image_name)
+            found = True
+            logger.info("__ACC__:Image was found.")
+        except:
+            # No image from snapshot was found thus attempt to create snapshot from Group12_Worker1
+            logger.info("__ACC__:No Image was found with name Worker_Base_Snapshot...")
+            logger.info("__ACC__:Looking for worker to create snapshot from...")
+            try:
+                # Attempts to find instance Group12_Worker1
+                base_worker = nova.servers.list(search_opts={"name": worker_name + str(1)})
+                # Found instance Group12_Worker1 -> Attempts to create snapshot from it
+                glance.images.create(name=worker_image_name, image=base_worker)
+            except:
+                # Since instance doesn't exist -> Attempts to create new instance Group12_Worker1
+                # Repeat the loop until snapshot is created and/or image is found
+                logger.info("__ACC__:No worker was found in Openstack.")
+                logger.info("__ACC__: Attempt Number " + str(attempt) + " to create a new instance.")
+                if attempt < 6:
+                    if create_new_worker():
+                        return True
+                    attempt += 1
+                else:
+                    logger.error("__ACC__: 5 failed attempts to create a new working. Quitting...")
+                    return False
+    return create_new_worker(image_name=worker_image_name)
 
-find_new_workers()
+def delete_worker(delete_worker_name=None):
+    if delete_worker_name:
+        worker_instance = nova.servers.list(search_opts={"name": delete_worker_name})
+        if len(worker_instance) == 0:
+            logger.info("__ACC__:No workers was found in Openstack to delete.")
+            return False
+        else:
+            logger.info("__ACC__:Found the instance. Attempting to delete it...")
+            worker_instance = worker_instance[0]
+    else:
+        delete_worker_name = "Group12_Worker"
+        workers = {}
+        workers_list = nova.servers.list(search_opts={"name": delete_worker_name})
+        if len(workers_list) == 0:
+            logger.info("__ACC__:No workers was found in Openstack to delete.")
+            return False
+        for worker in workers_list:
+            worker_name = worker.name.lower()
+            worker_index = worker_name[worker_name.find("worker") + len("worker"):]
+            workers[worker_index] = worker
+        worker_instance = workers[sorted(workers.keys())[-1]]
+    try:
+        ip = worker_instance.networks[private_net][0]
+        nova.servers.delete(worker_instance)
+        logger.info("__ACC__: Successfully deleted the instance: ", worker_instance)
+        return ip
+    except:
+        logger.error("__ACC__: Failed to remove a worker. Quitting...")
+        return False
+
+
+def edit_file(file_name, compare_line):
+    f = open(file_name, "r")
+    lines = f.readlines()
+    removed_lines = []
+    f.close()
+    f = open(file_name, "w")
+    for line in lines:
+        if compare_line in line.strip().split():
+            logger.info("__ACC__: Removed the host line: ", line.strip(), "from the file: ", file_name)
+            removed_lines.append(line)
+            continue
+        f.write(line)
+    f.close()
+    return removed_lines
+
+
+def remove_cluster_worker():
+    ip = delete_worker()
+    if not ip:
+        logger.error("__ACC__: Unable to remove worker from the cluster...")
+        return False
+    try:
+        removed_lines = edit_file(file_name="/etc/hosts", compare_line=ip)
+    except:
+        logger.error("__ACC__: Failed to edit the file /etc/hosts. Please remove manually the hosts with IP: ", ip)
+        return False
+    for line in removed_lines:
+        try:
+            removed_host = line.strip().split()[1]
+        except:
+            logger.error("__ACC__: The file /etc/hosts with the IP", ip, "is not found. Check syntax..")
+            return False
+        try:
+            edit_file(file_name="/etc/ansible/hosts",compare_line=removed_host)
+
+        except:
+            logger.error("__ACC__: Failed to edit the file /etc/ansible/hosts. "
+                         "Please remove manually the hosts with hostname: ", removed_host)
+            return False
+    return True
+
+# create_new_worker()
+
+# find_new_workers()
+
+# create_worker_snapshot()

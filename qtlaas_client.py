@@ -1,6 +1,6 @@
 import requests
 
-SERVER_URL = 'http://127.0.0.1:5000'
+SERVER_URL = 'http://130.238.29.41:5000'
 UPLOAD_URL = SERVER_URL + '/upload'
 CREATE_URL = SERVER_URL + '/create'
 DESTROY_URL = SERVER_URL + '/destroy'
@@ -8,7 +8,11 @@ WORKERS_URL = SERVER_URL + '/workers'
 STATUS_URL = SERVER_URL + '/status'
 
 def upload_file(path_to_file):
-	files = {'file':open(path_to_file, 'rb')}
+	try:
+		files = {'file':open(path_to_file, 'rb')}
+	except IOError:
+		print("No such file! Try again.")
+		return False
 	r=requests.post(UPLOAD_URL, files=files, timeout=60)
 	return check_status(r)
 

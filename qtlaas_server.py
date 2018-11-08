@@ -88,5 +88,3 @@ if __name__ == '__main__':
 		os.mkdir('uploads')
 		#app.run(debug=True) #For Internal
 		app.run(host="0.0.0.0", debug=True) #For external
-
-	

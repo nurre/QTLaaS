@@ -6,7 +6,7 @@ def fix_token_file():
         if "?token=" not in line:
             continue
         i = line.find("?token=")
-        token = line[i + len("?token="):].split()[0]
+        token = line[i + len("?token="):].split()[0]+"\n"
         break
     f = open("token.txt", "w")
     f.write(token)

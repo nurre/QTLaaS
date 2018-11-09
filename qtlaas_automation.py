@@ -310,10 +310,12 @@ def remove_cluster_worker():
             return False
     return True
 
+
 def remove_all_workers():
     status = True
     while status:
         status = remove_cluster_worker()
+
 
 def edit_master_file(file_name, lines):
     try:

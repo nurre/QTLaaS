@@ -2,7 +2,7 @@ import os
 from flask import Flask, flash, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = '/home/nurre/QTLaaS/uploads/'
+UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/uploads/'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
@@ -81,5 +81,10 @@ def uploaded_file(filename):
                                filename)
 
 if __name__ == '__main__':
-	#app.run(debug=True) #For Internal
-	app.run(host="0.0.0.0", debug=True) #For external
+	if (os.path.isdir(os.path.dirname(os.path.realpath(__file__)) + '/uploads/')):
+		#app.run(debug=True) #For Internal
+		app.run(host="0.0.0.0", debug=True) #For external
+	else: 
+		os.mkdir('uploads')
+		#app.run(debug=True) #For Internal
+		app.run(host="0.0.0.0", debug=True) #For external

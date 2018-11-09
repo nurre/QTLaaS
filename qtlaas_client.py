@@ -1,6 +1,6 @@
 import requests
 
-SERVER_URL = 'http://130.238.29.41:5000'
+SERVER_URL = "http://" + input("The address to the server (excluding \'https://\', with the port): ")
 UPLOAD_URL = SERVER_URL + '/upload'
 CREATE_URL = SERVER_URL + '/create'
 DESTROY_URL = SERVER_URL + '/destroy'
@@ -16,14 +16,6 @@ def upload_file(path_to_file):
 	r=requests.post(UPLOAD_URL, files=files, timeout=60)
 	return check_status(r)
 
-def start_service(number_of_workers):
-	pass
-
-def stop_service():
-	pass
-
-def configure_workers(new_number_of_workers):
-	pass
 
 def check_status(r):
 	status = r.raise_for_status()
@@ -72,12 +64,9 @@ Main menu:
 			print('Incorrect input. Try again!')
 
 
-
-
 if __name__ == '__main__':
 	main_menu()
-	#print(upload_file('/home/nurre/Hämtningar/28580230_859221900929645_1575770519_o.png'))
-
+	
 
 
 

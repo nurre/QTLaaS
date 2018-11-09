@@ -14,7 +14,8 @@ We need to have at least one node up and running and acting as the master node a
 1. Make sure of the following:
     * You have OpenStack installed on your local machine or that you are already inside a Virtual Machine inside OpenStack. And that you have access to the Infrastructure.
     * Your credentials for OpenStack's Cloud Project are available for authentication in your local machine with the name `SNIC.sh`.
-    * Openstack's Cloud Project has a keypair with the name `goup12`. You can check using CLI command: `openstack keypair list`. Which later you should have it copied into the Master node you can successfully ssh into the master node. YYou can copy it by running: `scp -i group12.pem SNIC.sh ubuntu@130.238.29.82:/home/ubuntu/`
+    Which later you should have it copied into the Master node you can successfully ssh into the master node. You can copy it by running: `scp -i group12.pem SNIC.sh ubuntu@130.238.29.82:/home/ubuntu/`
+    * Openstack's Cloud Project has a keypair with the name `goup12`. You can check using CLI command: `openstack keypair list`.  
     If you can't locate it, then you can simply create a new keypair using the CLI command `openstack keypair create group12`.
     Which later you should have it copied into the Master node you can successfully ssh into the master node. You can copy it by running: `scp -i group12.pem group12.pem ubuntu@130.238.29.82:/home/ubuntu`
 2. Clone this repo on your machine using: 

@@ -34,3 +34,5 @@ We need to have at least one node up and running and acting as the master node a
 7. `cd QTLaaS` to get into the project's directory and run `sudo chmod +x setup_master.sh` to  create an executable file from the `setup_master.sh` file.
 9. Finally run `./setup_master.sh` to create a worker and setup the master node with spark cluster and ansible. => **This should be done with the REST API.**
 10. Make sure the following ports are open on Spark Master node, 60060 for Jupyter Hub (external access), 7077 Spark Context (internal access), 8080 Spark Web UI (internal access).
+
+Please note that steps 1 to 4 can be done manually using OpenStack's Horizon (Dashboard).

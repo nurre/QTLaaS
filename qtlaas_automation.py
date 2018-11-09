@@ -25,7 +25,7 @@ image_name = "Ubuntu 16.04 LTS (Xenial Xerus) - latest"
 keyname = "group12"
 instances_prefix = "Group12_"
 worker_name = instances_prefix + "Worker"
-worker_image_name = "Group12_WorkerBase_Snapshot"
+worker_image_name = instances_prefix + "WorkerBase_Snapshot"
 
 loader = loading.get_plugin_loader('password')
 
@@ -42,7 +42,6 @@ sess = session.Session(auth=auth)
 nova = client.Client('2.1', session=sess)
 glance = glclient.Client('2.1', session=sess)
 logger.info("__ACC__: Successfully completed User Authorization.")
-
 
 
 # Simple function to print all Group12 relevant instances

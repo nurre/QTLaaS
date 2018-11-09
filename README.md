@@ -1,46 +1,35 @@
-# QTL as a Service
+# QTL as a Service Group 12
 
 Project webpage: http://www.it.uu.se/research/project/ctrait/QTLaaS
 
 ## Summary
-We have developed QTL as a Service (QTLaaS) using PruneDIRECT algorithm. QTLaaS automatically deploys an R cluster for using PruneDIRECT, or any statistical analysis in R, over your desired infrastructure.
- 
-Three files are required for this method: `ansible_install.sh, setup_var.yml,spark_deployment.yml`
+We have developed a cluster that deploys QTL as a Service (QTLaaS) in an OpenStack Cloud. QTLaaS automatically deploys an R cluster for using PruneDIRECT, or any statistical analysis in R, over your desired infrastructure. Where we chose OpenStack as the base for the Infrastructure.
+We create a RESTFUL API to create, resize and decommission the QTL platform on request in a horizontally scalable system. 
 
-Note: Following commands have been tested on Ubuntu 16.04.  
-
-0. Step 0: `python` command is required to be available on each node. If it is not available install with `# apt install python-minimal`   
-1. Step 1: Install Ansible using the bash script, `ansible_install.sh`.
-2. Step 2: Modify the environment variables available in the file: `setup_var.yml`, if needed.
-3. Step 3: For setup deployment, execute: `spark_deployment.yml` as root which is the actual file that contains the installation setups for all the components of QTLaaS platform. Command: `# ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag. 
-
-We will soon provide a demo through our project webpage using the SNIC cloud resources. The users can try QTLaaS over a few nodes in our cloud setting. For larger computation, one can download QTLaaS from the github repository and deploy the desired number of nodes over an infrastructure.
+2 files are required for this project: `group12.pem` and `SNIC.sh`.
+In order to start up the cluster please follow the Setup details.
 
 ## Setup details
-
-1. Setup at least 3 nodes, one for the Ansible Master, one for the Spark Master, and at least one for the Spark Worker. 
-2. Install Ansible on Ansible Master node by executing the script: `ansible_install.sh`. The script requires super-user privilege. 
-3. Add the IP-address and hostname of the Ansible Master, Spark Master and Spark Worker to 
-`/etc/hosts`
-file in Ansible Master node.
-4. Generate a SSH-key pair in Ansible Master node and copy its public part to `~/.ssh/authorized_keys` in all the Spark nodes. This step allows Ansible Master to communicate with Spark nodes. 
-
-For more information on ansible communication setup, visit: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04 (Step-1 - 4)
-
-5. Edit `/etc/ansible/hosts` using `example-hosts-file` available in the reprository. (Add `[sparkmaster]` followed by the name of sparkmaster node in the next line. Add `[sparkworker]` followed by the names of sparkworkers in the next lines, one per line).
-6. Modify the environment variables available in the file `setup_var.yml`, if needed.
-7. Run `ansible-playbook -s spark_deployment.yml`, where `-s` is the sudo flag.
-8. Make sure the following ports are open on Spark Master node, `60060` for Jupyter Hub (external access), `7077` Spark Context (internal access), `8080` Spark Web UI (internal access).
-9. Jupyter server tokens will be visible in ansible log messages.
-10. Now you can access following services: 
-`http://<sparkmaster-external-IP>:60060`
-11. Execute the steps mentioned in `example-sparkR` file to make sure your setup is working. 
-
-After all the steps above, Jupiter, Spark Master and R will be installed in Spark Master, and Spark Worker and R is installed in all Spark Workers.
-
-## (Optional) Add more node(s)
-
-Here are the steps to add new nodes to your already configured cluster:
-
-1. New node(s) should be accessible from the Ansible Master node (repeat steps (3,4 and 5) mentioned in the "Setup details" section).    
-2. Run the ansible playbook again. `ansible-playbook -s spark_deployment.yml`.
+We need to have at least one node up and running and acting as the master node and the server. Which is the point of this setup. Where at the end we will have a connected cluster with 1 Master node (acting as Flask server, Spark Master, and Ansible Master) and 1 Worker node.
+0. Make sure of the following:
+    * You have OpenStack installed on your local machine or that you are already inside a Virtual Machine inside OpenStack. And that you have access to the Infrastructure.
+    * Your credentials for OpenStack's Cloud Project are available for authentication in your local machine with the name `SNIC.sh`.
+    * Openstack's Cloud Project has a keypair with the name `goup12`. You can check using CLI command: `openstack keypair list`. 
+    If you can't locate it, then you can simply create a new keypair using the CLI command `openstack keypair create group12`.
+1. Clone this repo on your machine using: 
+    `git clone https://github.com/nurre/QTLaaS.git`.
+2. Run the command following command to create a master node: 
+    `python -c 'from qtlaas_automation import create_new_instance; create_new_instance(master_name="Group12_Master", master=True)'`
+3. Assign a floating IP to the master node just created:
+    * To list the floating IPs availalable run `openstack ip floating list` and locate the Floating IPs with `None` in the **"Fixed IP Address"** Column and **"Port"**.
+    * Assign that IP to the new instance created using CLI:
+        `nova add-floating-ip Group12_Master 130.xxx.xx.xx`.
+4. SSH into the master node using the following commands:
+    * `ssh-add group12.pem` (the same key referenced and/or created in step 1).
+    * `ssh ubuntu@130.xxx.xx.xx` (the smae IP obtained from Step 3).
+5. Clone this repo in the Master Node using:
+    `git clone https://github.com/nurre/QTLaaS.git`.
+6. `cd QTLaaS` to get into the project's directory and run `sudo chmod +x setup_master.sh` to  create an executable file  from the `setup_master.sh` file.
+7. We want to copy the credentials into the master node. So in your local machine (not the master node we just ssh-ed into), `cd` inside the local directory where the “SNIC.sh” file is located. And run `scp -i group12.pem SNIC.sh ubuntu@130.238.29.82:/home/ubuntu/QTLaaS`.
+8. We want to do the same thing for the **“group12.pem”** keypair. Make sure you are in the same directory where group12.pem file is located locally and run `scp -i group12.pem group12.pem ubuntu@130.238.29.82:/home/ubuntu/QTLaaS`.
+9. Finally run `./setup_master.sh` to create a worker and setup the master node with spark cluster and ansible. => **This should be done with the REST API.**

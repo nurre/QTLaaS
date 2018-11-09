@@ -33,3 +33,4 @@ We need to have at least one node up and running and acting as the master node a
 7. We want to copy the credentials into the master node. So in your local machine (not the master node we just ssh-ed into), `cd` inside the local directory where the “SNIC.sh” file is located. And run `scp -i group12.pem SNIC.sh ubuntu@130.238.29.82:/home/ubuntu/QTLaaS`.
 8. We want to do the same thing for the **“group12.pem”** keypair. Make sure you are in the same directory where group12.pem file is located locally and run `scp -i group12.pem group12.pem ubuntu@130.238.29.82:/home/ubuntu/QTLaaS`.
 9. Finally run `./setup_master.sh` to create a worker and setup the master node with spark cluster and ansible. => **This should be done with the REST API.**
+10. Make sure the following ports are open on Spark Master node, 60060 for Jupyter Hub (external access), 7077 Spark Context (internal access), 8080 Spark Web UI (internal access).

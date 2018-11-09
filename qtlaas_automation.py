@@ -248,15 +248,15 @@ def delete_worker(delete_worker_name=None):
             logger.info("__ACC__:Found the instance. Attempting to delete it...")
             worker_instance = worker_instance[0]
     else:
-        delete_worker_name = "Group12_Worker"
+        delete_worker_name = worker_name
         workers = {}
         workers_list = nova.servers.list(search_opts={"name": delete_worker_name})
         if len(workers_list) == 0:
             logger.info("__ACC__:No workers was found in Openstack to delete.")
             return False
         for worker in workers_list:
-            worker_name = worker.name.lower()
-            worker_index = worker_name[worker_name.find("worker") + len("worker"):]
+            w_name = worker.name.lower()
+            worker_index = w_name[w_name.find("worker") + len("worker"):]
             workers[worker_index] = worker
         worker_instance = workers[sorted(workers.keys())[-1]]
     try:
@@ -310,6 +310,10 @@ def remove_cluster_worker():
             return False
     return True
 
+def remove_all_workers():
+    status = True
+    while status:
+        status = remove_cluster_worker()
 
 def edit_master_file(file_name, lines):
     try:

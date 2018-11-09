@@ -1,13 +1,13 @@
 import os
 import subprocess
-#import qtlaas_automation
-#import get_ansible_workers
+from qtlaas_automation import create_worker_snapshot, remove_cluster_worker, get_master_floating_ip, find_new_workers
+from get_ansible_workers  import return_workers
 from flask import Flask, flash, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/uploads/'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv'])
-existing_network=False
+existing_network = True
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -30,6 +30,7 @@ def hello_world():
 def create_qtlaas(x):
 	#Start process of creating the network by running the script for that with x number of workers
 	somethingwentwrong = "Something went wrong during the creation of the workers, check the number below.\n"
+	x=int(x)
 	if not existing_network:
 		subprocess.check_output(['chmod', '+x', 'setup_master.sh'])
 		response = subprocess.check_output(['sudo', './setup_master.sh'])
@@ -41,20 +42,13 @@ def create_qtlaas(x):
 					workers_started = workers_started + 1
 				else:
 					workercreationfail = True
-
+			find_new_workers()
 	if existing_network:
-		workers_started = 0
-		workercreationfail = False
-		if x > 0:
-			for i in xrange(0, x):
-				if (create_worker_snapshot()):
-					workers_started = workers_started + 1
-				else:
-					workercreationfail = True
+		return configure_number_of_workers(x)
 	
 	sparkmasteraddress = 'http://' + get_master_floating_ip() + ':60060'
 	token = get_token()
-	returnstring = "Number of workers started: " + workers_started + "\n Address to Spark Master: " + sparkmasteraddress + " \n Token: " + token
+	returnstring = "Number of workers started: " + str(workers_started) + "\n Address to Spark Master: " + sparkmasteraddress + " \n Token: " + token
 	if not workercreationfail:
 		return  returnstring
 	else:
@@ -63,22 +57,25 @@ def create_qtlaas(x):
 @app.route('/workers/<x>')
 def configure_number_of_workers(x):
 	#Configure the number of workers available by either destroying a number of 
+	x=int(x)
 	if not existing_network:
 		return "QTLaaS has not been started!"
 	else:
-		current_number_of_workers = return_workers().length()
+		current_number_of_workers = len(return_workers())
 		if current_number_of_workers == x:
-			return "Number of workers are already at " + x + "."
+			return "Number of workers are already at " + str(x) + "."
 		elif (current_number_of_workers > x):
 			failcounter = 0
 			while current_number_of_workers > x:
-				if (delete_worker()):
+				if (remove_cluster_worker()):
 					current_number_of_workers = current_number_of_workers - 1
 					failcounter = 0
 				else:
 					failcounter = failcounter + 1
 					if failcounter > 2:
-						return "Something went wrong when deleting workers. Number of workers still active: " + current_number_of_workers
+						return "Something went wrong when deleting workers. Number of workers still active: " + str(current_number_of_workers)
+			return "New number of workers: " + str(len(return_workers()))
+
 		else:
 			workercreationfail = False
 			new_workers_to_add = x - current_number_of_workers
@@ -88,6 +85,9 @@ def configure_number_of_workers(x):
 					i = i + 1
 				else:
 					workercreationfail = True
+					i = i + 1
+			print(find_new_workers())
+			return "boiNew number of workers: " + str(len(return_workers()))
 
 
 @app.route('/destroy')
@@ -96,7 +96,7 @@ def destory():
 	number_of_workers = return_workers().length()
 	failcounter = 0
 	while (number_of_workers > 0):
-		if (delete_worker()):
+		if (remove_cluster_worker()):
 			number_of_workers = number_of_workers - 1
 			failcounter = 0
 		else:

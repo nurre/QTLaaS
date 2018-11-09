@@ -1,12 +1,24 @@
 import os
+import subprocess
+#import qtlaas_automation
+#import get_ansible_workers
 from flask import Flask, flash, request, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/uploads/'
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv'])
+existing_network=False
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def get_token():
+	f = open("token.txt")
+	line = f.readline()
+	f.close()
+	return line
+
 
 
 @app.route('/')
@@ -16,24 +28,90 @@ def hello_world():
 
 @app.route('/create/<x>')
 def create_qtlaas(x):
-	#Start process of creating the network by running the script for that with x nuber of workers
-	return 'Creating QTLaaS...\n[REMOVE THIS WHEN IMPLEMENTED]'
+	#Start process of creating the network by running the script for that with x number of workers
+	somethingwentwrong = "Something went wrong during the creation of the workers, check the number below.\n"
+	if not existing_network:
+		subprocess.check_output(['chmod', '+x', 'setup_master.sh'])
+		response = subprocess.check_output(['sudo', './setup_master.sh'])
+		workers_started = 1
+		workercreationfail = False
+		if x > 1:
+			for i in xrange(1, x):
+				if (create_worker_snapshot()):
+					workers_started = workers_started + 1
+				else:
+					workercreationfail = True
+
+	if existing_network:
+		workers_started = 0
+		workercreationfail = False
+		if x > 0:
+			for i in xrange(0, x):
+				if (create_worker_snapshot()):
+					workers_started = workers_started + 1
+				else:
+					workercreationfail = True
+	
+	sparkmasteraddress = 'http://' + get_master_floating_ip() + ':60060'
+	token = get_token()
+	returnstring = "Number of workers started: " + workers_started + "\n Address to Spark Master: " + sparkmasteraddress + " \n Token: " + token
+	if not workercreationfail:
+		return  returnstring
+	else:
+		return somethingwentwrong + returnstring
 
 @app.route('/workers/<x>')
 def configure_number_of_workers(x):
 	#Configure the number of workers available by either destroying a number of 
-	#workers or by creating some with a script.
-	return 'Configuring the number of workers...\n[REMOVE THIS WHEN IMPLEMENTED]'
+	if not existing_network:
+		return "QTLaaS has not been started!"
+	else:
+		current_number_of_workers = return_workers().length()
+		if current_number_of_workers == x:
+			return "Number of workers are already at " + x + "."
+		elif (current_number_of_workers > x):
+			failcounter = 0
+			while current_number_of_workers > x:
+				if (delete_worker()):
+					current_number_of_workers = current_number_of_workers - 1
+					failcounter = 0
+				else:
+					failcounter = failcounter + 1
+					if failcounter > 2:
+						return "Something went wrong when deleting workers. Number of workers still active: " + current_number_of_workers
+		else:
+			workercreationfail = False
+			new_workers_to_add = x - current_number_of_workers
+			i = 0
+			while i < new_workers_to_add:
+				if (create_worker_snapshot()):
+					i = i + 1
+				else:
+					workercreationfail = True
+
 
 @app.route('/destroy')
 def destory():
-	#Deletes the master and the worker nodes.
-	return 'Deleting all available worker and master nodes...\n[REMOVE THIS WHEN IMPLEMENTED]'
+	return "It worked."
+	number_of_workers = return_workers().length()
+	failcounter = 0
+	while (number_of_workers > 0):
+		if (delete_worker()):
+			number_of_workers = number_of_workers - 1
+			failcounter = 0
+		else:
+			failcounter = failcounter + 1
+			if failcounter > 2:
+				return "Something went wrong when deleting workers. Number of workers still active: " + number_of_workers
 
-@app.route('/status')
-def status():
-	#Return the status of the network.
-	return 'Is it burning yet? Are are we good?\n[REMOVE THIS WHEN IMPLEMENTED]'
+	return 'All workers have been destroyed!,'
+
+@app.route('/token')
+def token():
+	sparkmasteraddress = 'http://' + get_master_floating_ip() + ':60060'
+	token = get_token()
+	#Return the latest token
+	return "Address to Spark Master: " + sparkmasteraddress + " \n Token: " + token
 
 
 # @app.route('/upload')

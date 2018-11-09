@@ -381,3 +381,11 @@ def setup_master_node(master_name=None):
         logger.error("__ACC__:Something went wrong while trying to open the file /etc/hosts. Make sure you "
                      "have permissions to open this file and try again. ")
         return False
+
+
+def get_master_floating_ip(master_name=None):
+    if master_name is None:
+        master_name = instances_prefix + "Master"
+    master_instance = nova.servers.list(search_opts={"name": master_name})[0]
+    ip = master_instance.networks[private_net][0]
+    return ip

@@ -20,7 +20,13 @@ private_net = "SNIC 2018/10-30 Internal IPv4 Network"
 floating_ip_pool_name = None
 floating_ip = None
 image_name = "Ubuntu 16.04 LTS (Xenial Xerus) - latest"
+
+#Naming conventions
 keyname = "group12"
+instances_prefix = "Group12_"
+worker_name = instances_prefix + "Worker"
+worker_image_name = "Group12_WorkerBase_Snapshot"
+
 loader = loading.get_plugin_loader('password')
 
 # Authorizing user from global variables
@@ -36,12 +42,12 @@ sess = session.Session(auth=auth)
 nova = client.Client('2.1', session=sess)
 glance = glclient.Client('2.1', session=sess)
 logger.info("__ACC__: Successfully completed User Authorization.")
-worker_name = "Group12_Worker"
+
 
 
 # Simple function to print all Group12 relevant instances
 def find_all_instances():
-    relevant_instances = nova.servers.list(search_opts={"name": "Group12"})
+    relevant_instances = nova.servers.list(search_opts={"name": instances_prefix})
     for instance in relevant_instances:
         ip = instance.networks[private_net][0]
         name = instance.name
@@ -164,7 +170,6 @@ def get_new_worker_name():
 def create_new_instance(image_name="Ubuntu 16.04 LTS (Xenial Xerus) - latest", instance_name=None, master=False):
     image = nova.images.find(name=image_name)
     flavor = nova.flavors.find(name=flavor_name)
-    keyname = "group12"
     if private_net is not None:
         net = nova.networks.find(label=private_net)
         nics = [{'net-id': net.id}]
@@ -205,7 +210,6 @@ def create_new_instance(image_name="Ubuntu 16.04 LTS (Xenial Xerus) - latest", i
 
 
 def create_worker_snapshot():
-    worker_image_name = "Group12_WorkerBase_Snapshot"
     found = False
     attempt = 1
     while not found:
@@ -332,7 +336,7 @@ def edit_master_file(file_name, lines):
 def setup_master_node(master_name=None):
 
     if master_name is None:
-        master_name = "Group12_Master"
+        master_name = instances_prefix + "Master"
 
     master_instance = nova.servers.list(search_opts={"name": master_name})[0]
     ip = master_instance.networks[private_net][0]

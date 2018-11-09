@@ -9,3 +9,6 @@ python -c 'from qtlaas_automation import setup_master_node; setup_master_node(ma
 sudo chmod +x setup_worker.sh
 sudo ./setup_worker.sh
 ansible-playbook -s spark_deployment.yml
+sudo jupyter notebook --allow-root &
+sudo jupyter notebook list > token.txt
+python fix_token.py

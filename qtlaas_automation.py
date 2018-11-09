@@ -208,7 +208,7 @@ def create_new_instance(image_name="Ubuntu 16.04 LTS (Xenial Xerus) - latest", i
         return False
 
 
-def create_worker_snapshot():
+def create_worker_snapshot(instance_name=None):
     found = False
     attempt = 1
     while not found:
@@ -217,6 +217,7 @@ def create_worker_snapshot():
             nova.images.find(name=worker_image_name)
             found = True
             logger.info("__ACC__:Image was found.")
+            return create_new_instance(image_name=worker_image_name, instance_name=instance_name)
         except:
             # No image from snapshot was found thus attempt to create snapshot from Group12_Worker1
             logger.info("__ACC__:No Image was found with name Worker_Base_Snapshot...")
@@ -226,19 +227,20 @@ def create_worker_snapshot():
                 base_worker = nova.servers.list(search_opts={"name": worker_name + str(1)})
                 # Found instance Group12_Worker1 -> Attempts to create snapshot from it
                 glance.images.create(name=worker_image_name, image=base_worker)
+                return create_new_instance(image_name=worker_image_name)
             except:
                 # Since instance doesn't exist -> Attempts to create new instance Group12_Worker1
                 # Repeat the loop until snapshot is created and/or image is found
                 logger.info("__ACC__:No worker was found in Openstack.")
                 logger.info("__ACC__: Attempt Number " + str(attempt) + " to create a new instance.")
                 if attempt < 6:
-                    if create_new_instance():
+                    if create_new_instance(instance_name=instance_name):
                         return True
                     attempt += 1
                 else:
                     logger.error("__ACC__: 5 failed attempts to create a new working. Quitting...")
                     return False
-    return create_new_instance(image_name=worker_image_name)
+    return True
 
 
 def delete_worker(delete_worker_name=None):

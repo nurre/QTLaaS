@@ -31,8 +31,7 @@ We need to have at least one node up and running and acting as the master node a
     * `ssh ubuntu@130.xxx.xx.xx` (the smae IP obtained from Step 3).
 6. Clone this repo in the Master Node using:
     `git clone https://github.com/nurre/QTLaaS.git`.
-7. `cd QTLaaS` to get into the project's directory and run `sudo chmod +x setup_master.sh` to  create an executable file from the `setup_master.sh` file.
-9. Finally run `./setup_master.sh` to create a worker and setup the master node with spark cluster and ansible. => **This should be done with the REST API.**
+7. Finally you can either run the Flask server and start the cluster from the client side. Or you can run `./setup_master.sh` to create a worker and setup the master node with spark cluster and ansible (make sure to run `sudo chmod +x setup_master.sh` to  create an executable file).
 10. Make sure the following ports are open on Spark Master node, 60060 for Jupyter Hub (external access), 7077 Spark Context (internal access), 8080 Spark Web UI (internal access).
 
 Please note that steps 1 to 4 can be done manually using OpenStack's Horizon (Dashboard).
